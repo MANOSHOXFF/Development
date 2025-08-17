@@ -11,6 +11,9 @@
         .logo { width: 200px; margin-bottom: 30px; }
         input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #333; background-color: #222; color: white; box-sizing: border-box; font-size: 16px; }
         button { width: 100%; padding: 15px; background-color: #e50914; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .register-btn { background-color: #444; }
+        .google-btn { background-color: #4285F4; margin-top: 20px; }
+        .google-btn img { vertical-align: middle; margin-right: 10px; }
     </style>
 </head>
 <body>
@@ -19,17 +22,47 @@
         <input type="email" id="auth-email" placeholder="Seu e-mail" required>
         <input type="password" id="auth-password" placeholder="Sua senha" required>
         <button id="login-btn">Entrar</button>
-        <button id="register-btn">Registrar</button>
+        <button id="register-btn" class="register-btn">Registrar</button>
+        <div style="margin-top: 20px; color: #888;">ou</div>
+        <button id="google-btn" class="google-btn">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google icon" width="20">
+            Entrar com Google
+        </button>
     </div>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script>
         const firebaseConfig = { apiKey: "AIzaSyDAC9Wfs3W82Vk5_OZVeJcrm1Ed0hKgOrI", authDomain: "cinezyplus.firebaseapp.com", projectId: "cinezyplus", storageBucket: "cinezyplus.appspot.com", messagingSenderId: "1075821783003", appId: "1:1075821783003:web:05ff558494fb0567abe9fe", measurementId: "G-6JLTN8E3SS" };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        document.getElementById('login-btn').addEventListener('click', () => auth.signInWithEmailAndPassword(document.getElementById('auth-email').value, document.getElementById('auth-password').value).catch(error => alert(error.message)));
-        document.getElementById('register-btn').addEventListener('click', () => auth.createUserWithEmailAndPassword(document.getElementById('auth-email').value, document.getElementById('auth-password').value).catch(error => alert(error.message)));
-        auth.onAuthStateChanged(user => { if (user) window.location.href = 'home.html'; });
+
+        // Login com E-mail e Senha
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            auth.signInWithEmailAndPassword(email, password).catch(error => alert(error.message));
+        });
+
+        // Registro de E-mail e Senha
+        document.getElementById('register-btn').addEventListener('click', () => {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            auth.createUserWithEmailAndPassword(email, password).catch(error => alert(error.message));
+        });
+
+        // Login com o Google
+        document.getElementById('google-btn').addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(error => alert(error.message));
+        });
+
+        auth.onAuthStateChanged(user => { 
+            if (user) {
+                window.location.href = 'home.html'; 
+            }
+        });
     </script>
 </body>
-</html>
+        </html>
+        
