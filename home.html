@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CINEZY+</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #e50914;
+            --background-dark: #101010;
+            --background-light: #181818;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--background-dark); color: white; font-family: 'Poppins', sans-serif; }
+        header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 4%;
+            background: var(--background-dark);
+            border-bottom: 1px solid #333;
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .logo-container img { height: 35px; }
+        #user-info { display: flex; align-items: center; gap: 15px; }
+        #user-info span { font-weight: 500; }
+        #logout-btn { padding: 8px 15px; border-radius: 6px; border: none; background: var(--primary-color); color: white; cursor: pointer; font-weight: 600; }
+        nav { display: flex; gap: 40px; }
+        nav a { color: #aaa; text-decoration: none; font-weight: 500; transition: color .2s; }
+        nav a:hover { color: white; }
+        .search-container { width: 100%; max-width: 500px; }
+        .search-container input { width: 100%; padding: 12px 20px; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; font-size: 16px; }
+        main { padding: 30px 4%; }
+        .section-title { font-size: 24px; border-left: 4px solid var(--primary-color); padding-left: 15px; margin-bottom: 10px; }
+        .carousel { display: flex; overflow-x: auto; gap: 15px; padding: 20px 0; scrollbar-width: none; }
+        .carousel::-webkit-scrollbar { display: none; }
+        .carousel-item {
+            flex: 0 0 180px;
+            height: 260px;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            background-color: var(--background-light);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        .carousel-item img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        .item-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 10px; background-color: #333; }
+        .item-placeholder-icon { font-size: 40px; color: #666; }
+        .item-title-overlay {
+            position: relative;
+            z-index: 2;
+            padding: 20px 10px 10px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 30%, transparent);
+            font-weight: 600;
+        }
+        .skeleton { animation: skeleton-pulse 1.5s infinite; background: linear-gradient(-90deg, #222 0%, #333 50%, #222 100%); background-size: 400% 400%; }
+        @keyframes skeleton-pulse { 0% { background-position: 0% 0%; } 100% { background-position: -135% 0%; } }
+        #movie-player-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.9); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        #close-player-movie { position: absolute; top: 20px; right: 20px; font-size: 2rem; color: white; background: none; border: none; cursor: pointer; }
+    </style>
+</head>
+<body style="background-color: #0c0c0c;">
+    <div id="app-container" style="visibility: hidden;">
+        <header>
+            <div class="header-top">
+                <div class="logo-container"><a href="home.html"><img src="https://i.ibb.co/zVQmCs0N/logo-2.png" alt="CINEZY+ Logo"></a></div>
+                <div id="user-info">
+                    <span>Olá, <span id="user-name"></span></span>
+                    <button id="logout-btn">Sair</button>
+                </div>
+            </div>
+            <nav><a href="#filmes">Filmes</a><a href="#series">Séries</a><a href="#animes">Animes</a></nav>
+            <div class="search-container"><input type="text" id="main-search-input" placeholder="Buscar..."></div>
+        </header>
+        <main>
+            <section id="filmes"><h2 class="section-title">Filmes</h2><div class="carousel" id="filmes-carousel"></div></section>
+            <section id="series"><h2 class="section-title">Séries</h2><div class="carousel" id="series-carousel"></div></section>
+            <section id="animes"><h2 class="section-title">Animes</h2><div class="carousel" id="animes-carousel"></div></section>
+        </main>
+    </div>
+    <div id="movie-player-modal">
+        <button id="close-player-movie">&times;</button>
+        <video id="movie-player" controls autoplay style="width:90%;max-width:1200px;"></video>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyDAC9Wfs3W82Vk5_OZVeJcrm1Ed0hKgOrI", authDomain: "cinezyplus.firebaseapp.com", projectId: "cinezyplus", storageBucket: "cinezyplus.appspot.com", messagingSenderId: "1075821783003", appId: "1:1075821783003:web:05ff558494fb0567abe9fe", measurementId: "G-6JLTN8E3SS" };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        document.addEventListener('DOMContentLoaded', () => {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    document.getElementById('app-container').style.visibility = 'visible';
+                    document.getElementById('user-name').textContent = user.displayName || user.email.split('@')[0];
+                    carregarTodoConteudo();
+                } else {
+                    window.location.href = 'index.html';
+                }
+            });
+            document.getElementById('logout-btn').addEventListener('click', () => auth.signOut());
+            const carregarCategoria = async (collectionName, carouselId) => {
+                const carousel = document.getElementById(carouselId);
+                try {
+                    const snapshot = await db.collection(collectionName).limit(15).get();
+                    carousel.innerHTML = '';
+                    snapshot.forEach(doc => {
+                        const item = doc.data();
+                        const div = document.createElement('div');
+                        div.className = 'carousel-item';
+                        div.dataset.videoUrl = item.videoUrl;
+                        if (item.imagemUrl && item.imagemUrl.startsWith('http')) {
+                            div.innerHTML = `<img src="${item.imagemUrl}" alt="${item.titulo}"><div class="item-title-overlay">${item.titulo}</div>`;
+                        } else {
+                            div.innerHTML = `<div class="item-placeholder"><div class="item-placeholder-icon">🚫</div><p>Sem Imagem</p></div><div class="item-title-overlay">${item.titulo}</div>`;
+                        }
+                        carousel.appendChild(div);
+                    });
+                } catch (error) { console.error(error); }
+            };
+            const carregarTodoConteudo = () => ["filmes", "series", "animes"].forEach(cat => carregarCategoria(cat, `${cat}-carousel`));
+            const moviePlayerModal = document.getElementById('movie-player-modal');
+            document.body.addEventListener('click', (e) => {
+                const item = e.target.closest('.carousel-item');
+                if (item && item.dataset.videoUrl) {
+                    document.getElementById('movie-player').src = item.dataset.videoUrl;
+                    moviePlayerModal.style.display = 'flex';
+                }
+            });
+            document.getElementById('close-player-movie').addEventListener('click', () => {
+                moviePlayerModal.style.display = 'none';
+                document.getElementById('movie-player').pause();
+            });
+        });
+    </script>
+</body>
+</html>

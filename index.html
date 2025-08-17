@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CINEZY+</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background-color: #0c0c0c; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-container { background-color: rgba(24, 24, 24, 0.85); padding: 40px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
+        .logo { width: 200px; margin-bottom: 30px; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #333; background-color: #222; color: white; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; background-color: #e50914; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <img src="https://i.ibb.co/zVQmCs0N/logo-2.png" alt="CINEZY+ Logo" class="logo">
+        <input type="email" id="auth-email" placeholder="Seu e-mail" required>
+        <input type="password" id="auth-password" placeholder="Sua senha" required>
+        <button id="login-btn">Entrar</button>
+        <button id="register-btn">Registrar</button>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyDAC9Wfs3W82Vk5_OZVeJcrm1Ed0hKgOrI", authDomain: "cinezyplus.firebaseapp.com", projectId: "cinezyplus", storageBucket: "cinezyplus.appspot.com", messagingSenderId: "1075821783003", appId: "1:1075821783003:web:05ff558494fb0567abe9fe", measurementId: "G-6JLTN8E3SS" };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        document.getElementById('login-btn').addEventListener('click', () => auth.signInWithEmailAndPassword(document.getElementById('auth-email').value, document.getElementById('auth-password').value).catch(error => alert(error.message)));
+        document.getElementById('register-btn').addEventListener('click', () => auth.createUserWithEmailAndPassword(document.getElementById('auth-email').value, document.getElementById('auth-password').value).catch(error => alert(error.message)));
+        auth.onAuthStateChanged(user => { if (user) window.location.href = 'home.html'; });
+    </script>
+</body>
+</html>
